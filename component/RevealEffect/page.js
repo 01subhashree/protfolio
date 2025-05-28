@@ -4,21 +4,23 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { TweenMax, Power1 } from "gsap";
 
-const RevealEffect = () => {
+const RevealEffect = ({ color = 0xe9e6f5, duration = 2.5, onFinish }) => {
   const canvasRef = useRef(null);
   const [showEffect, setShowEffect] = useState(true);
 
   useEffect(() => {
+    if (!showEffect) return;
+
     document.body.classList.add("bg-white");
 
     let renderer, scene, camera;
     let width, height, wWidth, wHeight;
 
     const conf = {
-      color: 0xffffff,
+      color: color, // pastel background color
       objectWidth: 12,
       objectThickness: 3,
-      ambientColor: 0x808080,
+      ambientColor: 0xe0e0e0,
       light1Color: 0xffffff,
       perspective: 75,
       cameraZ: 75,
@@ -105,21 +107,23 @@ const RevealEffect = () => {
         const ry = THREE.MathUtils.randFloatSpread(2 * Math.PI);
         const rz = THREE.MathUtils.randFloatSpread(2 * Math.PI);
 
-        TweenMax.to(mesh.rotation, 2, { x: rx, y: ry, z: rz, delay });
-        TweenMax.to(mesh.position, 2, {
+        TweenMax.to(mesh.rotation, duration, { x: rx, y: ry, z: rz, delay });
+        TweenMax.to(mesh.position, duration, {
           z: 80,
           delay: delay + 0.5,
           ease: Power1.easeOut,
         });
-        TweenMax.to(mesh.material, 2, { opacity: 0, delay: delay + 0.5 });
+        TweenMax.to(mesh.material, duration, { opacity: 0, delay: delay + 0.5 });
       });
 
       setTimeout(() => {
         setShowEffect(false);
+        if (onFinish) onFinish();
       }, 4500);
     };
 
     const animate = () => {
+      if (!showEffect) return;
       requestAnimationFrame(animate);
       renderer.render(scene, camera);
     };
@@ -138,8 +142,12 @@ const RevealEffect = () => {
 
     return () => {
       window.removeEventListener("resize", onResize);
+      setShowEffect(false);
     };
-  }, []);
+    // eslint-disable-next-line
+  }, [showEffect]);
+
+  if (!showEffect) return null;
 
   return (
     <canvas
